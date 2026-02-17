@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Blue Chip Tokens</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .last-updated {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn {
+            background: #333;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #444;
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #111;
+            color: #fff;
+            font-size: 1rem;
+            width: 250px;
+        }
+
+        .search-box::placeholder {
+            color: #666;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #555;
+        }
+
+        .table-container {
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #222;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th {
+            background: #1a1a1a;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            background: #222;
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            font-size: 0.7rem;
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            font-size: 0.7rem;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        tr:hover {
+            background: #1a1a1a;
+        }
+
+        tr.low-mcap {
+            background: rgba(249, 115, 22, 0.12);
+        }
+
+        tr.low-mcap:hover {
+            background: rgba(249, 115, 22, 0.2);
+        }
+
+        .rank {
+            color: #666;
+            font-weight: 600;
+            width: 50px;
+        }
+
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .token-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .token-symbol {
+            color: #666;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .price {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #fff;
+        }
+
+        .change {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .change.positive {
+            color: #22c55e;
+        }
+
+        .change.negative {
+            color: #ef4444;
+        }
+
+        .ath-down {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #ef4444;
+        }
+
+        .launch-up {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #22c55e;
+        }
+
+        .launch-down {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #ef4444;
+        }
+
+        .ath-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ath-price {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .market-cap, .volume, .fdv {
+            font-family: 'SF Mono', Monaco, monospace;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #888;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ef4444;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .auto-refresh input {
+            accent-color: #888;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .token-logo {
+                width: 24px;
+                height: 24px;
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Solana Blue Chip Tokens</h1>
+            <p class="subtitle">Real-time tracker for Colosseum IC</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search tokens...">
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" checked>
+                <label for="autoRefresh">Auto-refresh (60s)</label>
+            </div>
+            <span class="last-updated" id="lastUpdated">Loading...</span>
+            <button class="refresh-btn" id="refreshBtn" onclick="fetchTokens()">Refresh</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sort="rank">#</th>
+                        <th data-sort="name">Token</th>
+                        <th data-sort="price">Price</th>
+                        <th data-sort="change7d">7d %</th>
+                        <th data-sort="change30d">30d %</th>
+                        <th data-sort="athChangePercent">From ATH</th>
+                        <th data-sort="launchChangePercent">From Launch</th>
+                        <th data-sort="fdv" class="hide-mobile">FDV</th>
+                        <th data-sort="marketCap" class="hide-mobile">Market Cap</th>
+                        <th data-sort="volume" class="hide-mobile">24h Volume</th>
+                    </tr>
+                </thead>
+                <tbody id="tokenTableBody">
+                    <tr>
+                        <td colspan="10" class="loading">
+                            <div class="spinner"></div>
+                            Loading token data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let tokens = [];
+        let sortColumn = 'fdv';
+        let sortDirection = 'desc';
+        let autoRefreshInterval = null;
+
+        // CoinGecko token IDs
+        const TOKEN_IDS = [
+            'solana',
+            'moby-ai',
+            'avici',
+            'jito-governance-token',
+            'kamino',
+            'jupiter-exchange-solana',
+            'solomon',
+            'omnipair',
+            'meteora',
+            'metaplex',
+            'humidifi',
+            'hivemapper',
+            'marinade',
+            'geodnet',
+            'raydium',
+            'zeta'
+        ];
+
+        const API_URL = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${TOKEN_IDS.join(',')}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d,30d`;
+
+        // Accurate first trading prices from CoinGecko historical data
+        // These are static values - first trading prices never change
+        const LAUNCH_PRICES = {
+            'solana': 0.78,              // Aug 2020 - first CoinGecko data point
+            'moby-ai': 0.012,            // 2024 launch
+            'avici': 0.80,               // Oct 2025 launch
+            'jito-governance-token': 2.00, // Dec 7, 2023 - first detected rate ~$2-3
+            'kamino': 0.04,              // Apr 30, 2024 - first detected rate $0.0407
+            'jupiter-exchange-solana': 0.66, // Jan 31, 2024 - traded $0.60-0.74
+            'solomon': 0.80,             // Nov 19, 2025 MetaDAO ICO at $0.80
+            'omnipair': 0.43,            // Aug 19, 2024 - first trading price
+            'meteora': 0.50,             // Oct 2025 launch, ATH $0.60
+            'metaplex': 0.30,            // Sept 20, 2022 launch
+            'humidifi': 0.25,            // Dec 2025 launch, ATH $0.33
+            'hivemapper': 0.095,         // Nov 2022 - first detected rate $0.0950
+            'marinade': 0.035,           // Oct 2021 launch
+            'geodnet': 0.02,             // Nov 2023 launch
+            'raydium': 7.50,             // Feb 21, 2021 - launched at ~$7-8.52
+            'zeta': 0.28                 // June 27, 2024 - ATH $0.31 on launch day
+        };
+
+
+        function formatPrice(price) {
+            if (price === null || price === undefined) return 'N/A';
+            if (price < 0.00001) return '$' + price.toExponential(2);
+            if (price < 0.01) return '$' + price.toFixed(6);
+            if (price < 1) return '$' + price.toFixed(4);
+            if (price < 1000) return '$' + price.toFixed(2);
+            return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatLargeNumber(num) {
+            if (num === null || num === undefined) return 'N/A';
+            if (num >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return '$' + (num / 1e3).toFixed(2) + 'K';
+            return '$' + num.toFixed(2);
+        }
+
+        function formatChange(change) {
+            if (change === null || change === undefined) return 'N/A';
+            const sign = change >= 0 ? '+' : '';
+            return sign + change.toFixed(2) + '%';
+        }
+
+        function formatAthChange(change) {
+            if (change === null || change === undefined) return 'N/A';
+            return change.toFixed(2) + '%';
+        }
+
+        async function fetchTokens() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const tbody = document.getElementById('tokenTableBody');
+
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                tokens = data.map((token, index) => {
+                    const launchPrice = LAUNCH_PRICES[token.id] || null;
+                    const launchChangePercent = launchPrice ? ((token.current_price - launchPrice) / launchPrice) * 100 : null;
+                    return {
+                        rank: index + 1,
+                        id: token.id,
+                        name: token.name,
+                        symbol: token.symbol,
+                        image: token.image,
+                        price: token.current_price,
+                        change: token.price_change_percentage_24h,
+                        change7d: token.price_change_percentage_7d_in_currency,
+                        change30d: token.price_change_percentage_30d_in_currency,
+                        ath: token.ath,
+                        athChangePercent: token.ath_change_percentage,
+                        launchPrice: launchPrice,
+                        launchChangePercent: launchChangePercent,
+                        fdv: token.fully_diluted_valuation,
+                        marketCap: token.market_cap,
+                        volume: token.total_volume
+                    };
+                });
+
+                renderTokens();
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Error fetching tokens:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="error">
+                            Failed to fetch token data. Please try again.<br>
+                            <small>${error.message}</small>
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = 'Refresh';
+            }
+        }
+
+        function renderTokens() {
+            const tbody = document.getElementById('tokenTableBody');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filteredTokens = tokens.filter(token =>
+                token.name.toLowerCase().includes(searchTerm) ||
+                token.symbol.toLowerCase().includes(searchTerm)
+            );
+
+            // Sort tokens
+            filteredTokens.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Update rank based on current sort
+            filteredTokens.forEach((token, index) => {
+                token.displayRank = index + 1;
+            });
+
+            if (filteredTokens.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="loading">No tokens found matching "${searchTerm}"</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredTokens.map(token => `
+                <tr class="${token.marketCap && token.marketCap < 50000000 ? 'low-mcap' : ''}">
+                    <td class="rank">${token.displayRank}</td>
+                    <td>
+                        <div class="token-info">
+                            <img src="${token.image}" alt="${token.name}" class="token-logo" onerror="this.style.display='none'">
+                            <div>
+                                <div class="token-name">${token.name}</div>
+                                <div class="token-symbol">${token.symbol}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="price">${formatPrice(token.price)}</td>
+                    <td class="change ${token.change7d >= 0 ? 'positive' : 'negative'}">${formatChange(token.change7d)}</td>
+                    <td class="change ${token.change30d >= 0 ? 'positive' : 'negative'}">${formatChange(token.change30d)}</td>
+                    <td class="ath-down">
+                        <div class="ath-info">
+                            <span>${formatAthChange(token.athChangePercent)}</span>
+                            <span class="ath-price">ATH: ${formatPrice(token.ath)}</span>
+                        </div>
+                    </td>
+                    <td class="${token.launchChangePercent !== null ? (token.launchChangePercent >= 0 ? 'launch-up' : 'launch-down') : ''}">
+                        <div class="ath-info">
+                            <span style="color: ${token.launchChangePercent === null ? '#666' : ''}">${token.launchChangePercent !== null ? (token.launchChangePercent >= 0 ? '+' : '') + token.launchChangePercent.toFixed(0) + '%' : 'N/A'}</span>
+                            <span class="ath-price">${token.launchPrice ? 'Launch: ' + formatPrice(token.launchPrice) : ''}</span>
+                        </div>
+                    </td>
+                    <td class="fdv hide-mobile">${formatLargeNumber(token.fdv)}</td>
+                    <td class="market-cap hide-mobile">${formatLargeNumber(token.marketCap)}</td>
+                    <td class="volume hide-mobile">${formatLargeNumber(token.volume)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+        }
+
+        function setupSorting() {
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+
+                    // Remove sorted classes from all headers
+                    document.querySelectorAll('th').forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+
+                    if (sortColumn === column) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = column;
+                        sortDirection = (column === 'rank' || column === 'name') ? 'asc' : 'desc';
+                    }
+
+                    th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                    renderTokens();
+                });
+            });
+        }
+
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+
+            function toggleAutoRefresh() {
+                if (checkbox.checked) {
+                    autoRefreshInterval = setInterval(fetchTokens, 60000);
+                } else {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+
+            checkbox.addEventListener('change', toggleAutoRefresh);
+            toggleAutoRefresh();
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(renderTokens, 300);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSorting();
+            setupAutoRefresh();
+            setupSearch();
+
+            // Fetch current prices (launch prices are hardcoded in LAUNCH_PRICES)
+            fetchTokens();
+        });
+    </script>
+</body>
+</html>
