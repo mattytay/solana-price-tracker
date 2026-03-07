@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Tokens</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --gold: #f59e0b;
+            --gold-dark: #d97706;
+            --gold-light: #fbbf24;
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --border-color: #262626;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        .subtitle a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .last-updated {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            width: 250px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .search-box::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th:hover {
+            color: var(--gold);
+            background: #222;
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            font-size: 0.7rem;
+            color: var(--gold);
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            font-size: 0.7rem;
+            color: var(--gold);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        tr.fdv-red {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        tr.fdv-red:hover {
+            background: rgba(239, 68, 68, 0.18);
+        }
+
+        tr.fdv-orange {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        tr.fdv-orange:hover {
+            background: rgba(239, 68, 68, 0.18);
+        }
+
+        tr.fdv-blue {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        tr.fdv-blue:hover {
+            background: rgba(245, 158, 11, 0.18);
+        }
+
+        tr.fdv-green {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        tr.fdv-green:hover {
+            background: rgba(34, 197, 94, 0.18);
+        }
+
+        .rank {
+            color: var(--text-muted);
+            font-weight: 600;
+            width: 50px;
+        }
+
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .token-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .token-symbol {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .token-name-clickable {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .token-name-clickable:hover {
+            color: var(--gold);
+        }
+
+        .unlock-link {
+            color: var(--gold);
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-top: 2px;
+            display: inline-block;
+            transition: color 0.2s;
+        }
+
+        .unlock-link:hover {
+            color: var(--gold-light);
+        }
+
+        .price {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-primary);
+        }
+
+        .change {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .change.positive {
+            color: var(--green);
+        }
+
+        .change.negative {
+            color: var(--red);
+        }
+
+        .ath-down {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--red);
+        }
+
+        .launch-up {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--green);
+        }
+
+        .launch-down {
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--red);
+        }
+
+        .ath-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ath-price {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .market-cap, .volume, .fdv {
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-secondary);
+        }
+
+        /* Unlock details row */
+        .unlock-details-row {
+            display: none;
+        }
+
+        .unlock-details-row.expanded {
+            display: table-row;
+        }
+
+        .unlock-details-row td {
+            background: var(--bg-primary);
+            padding: 0;
+        }
+
+        .unlock-details-content {
+            padding: 20px;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .unlock-section {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .unlock-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .unlock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .unlock-item:last-child {
+            border-bottom: none;
+        }
+
+        .unlock-date {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+        }
+
+        .unlock-date.soon {
+            color: var(--red);
+        }
+
+        .unlock-date.warning {
+            color: var(--gold);
+        }
+
+        .unlock-date.future {
+            color: var(--text-secondary);
+        }
+
+        .unlock-date.past {
+            color: var(--text-muted);
+        }
+
+        .unlock-percent {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .unlock-notes {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .unlock-summary {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 12px;
+        }
+
+        .unlock-summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+        }
+
+        .unlock-summary-label {
+            color: var(--text-secondary);
+        }
+
+        .unlock-summary-value {
+            color: var(--text-primary);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .unlock-fully-vested {
+            color: var(--green);
+            font-size: 0.9rem;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: var(--red);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .auto-refresh input {
+            accent-color: var(--gold);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .logo {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .token-logo {
+                width: 24px;
+                height: 24px;
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+
+            .unlock-details-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* Chart Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .modal-token-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-token-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .modal-token-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-token-symbol {
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .modal-token-price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--gold);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--gold);
+        }
+
+        .modal-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container {
+            flex: 1;
+            min-height: 350px;
+            position: relative;
+        }
+
+        .date-range-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .range-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .range-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .range-btn.active {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-color: var(--gold);
+            color: #000;
+        }
+
+        .chart-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 350px;
+            color: var(--text-muted);
+        }
+
+        .chart-loading .spinner {
+            margin-right: 15px;
+        }
+
+        .chart-error {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 350px;
+            color: var(--red);
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-header {
+                padding: 15px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .modal-token-price {
+                font-size: 1.2rem;
+            }
+
+            .modal-body {
+                padding: 15px;
+            }
+
+            .chart-container {
+                min-height: 250px;
+            }
+
+            .date-range-buttons {
+                justify-content: center;
+            }
+
+            .range-btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" alt="Solana">
+                </div>
+                <h1>Solana Tokens</h1>
+            </div>
+            <p class="subtitle">Real-time tracker</p>
+        </header>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search tokens...">
+            <div class="auto-refresh">
+                <input type="checkbox" id="autoRefresh" checked>
+                <label for="autoRefresh">Auto-refresh (60s)</label>
+            </div>
+            <span class="last-updated" id="lastUpdated">Loading...</span>
+            <button class="refresh-btn" id="refreshBtn" onclick="fetchTokens()">Refresh</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-sort="rank">#</th>
+                        <th data-sort="name">Token</th>
+                        <th data-sort="price">Price</th>
+                        <th data-sort="change7d">7d %</th>
+                        <th data-sort="change30d">30d %</th>
+                        <th data-sort="athChangePercent">From ATH</th>
+                        <th data-sort="launchChangePercent">From Launch</th>
+                        <th data-sort="fdv" class="hide-mobile">FDV</th>
+                        <th data-sort="marketCap" class="hide-mobile">Market Cap</th>
+                        <th data-sort="volume" class="hide-mobile">24h Volume</th>
+                    </tr>
+                </thead>
+                <tbody id="tokenTableBody">
+                    <tr>
+                        <td colspan="10" class="loading">
+                            <div class="spinner"></div>
+                            Loading token data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div class="modal-overlay" id="chartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-token-info">
+                    <img src="" alt="" class="modal-token-logo" id="modalTokenLogo">
+                    <div>
+                        <div class="modal-token-name" id="modalTokenName"></div>
+                        <div class="modal-token-symbol" id="modalTokenSymbol"></div>
+                    </div>
+                </div>
+                <div class="modal-token-price" id="modalTokenPrice"></div>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="date-range-buttons">
+                    <button class="range-btn" data-days="1">1D</button>
+                    <button class="range-btn active" data-days="7">7D</button>
+                    <button class="range-btn" data-days="30">1M</button>
+                    <button class="range-btn" data-days="90">3M</button>
+                    <button class="range-btn" data-days="365">1Y</button>
+                    <button class="range-btn" data-days="max">Max</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tokens = [];
+        let sortColumn = 'fdv';
+        let sortDirection = 'desc';
+        let autoRefreshInterval = null;
+        let expandedUnlocks = new Set();
+
+        // CoinGecko token IDs
+        const TOKEN_IDS = [
+            'solana',
+            'moby-ai',
+            'avici',
+            'jito-governance-token',
+            'kamino',
+            'jupiter-exchange-solana',
+            'solomon',
+            'omnipair',
+            'meteora',
+            'metaplex',
+            'humidifi',
+            'hivemapper',
+            'marinade',
+            'geodnet',
+            'raydium',
+            'zeta'
+        ];
+
+        const API_URL = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${TOKEN_IDS.join(',')}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d,30d`;
+
+        // Accurate first trading prices from CoinGecko historical data
+        const LAUNCH_PRICES = {
+            'solana': 0.78,
+            'moby-ai': 0.012,
+            'avici': 0.80,
+            'jito-governance-token': 2.00,
+            'kamino': 0.04,
+            'jupiter-exchange-solana': 0.66,
+            'solomon': 0.80,
+            'omnipair': 0.43,
+            'meteora': 0.50,
+            'metaplex': 0.30,
+            'humidifi': 0.25,
+            'hivemapper': 0.095,
+            'marinade': 0.035,
+            'geodnet': 0.02,
+            'raydium': 7.50,
+            'zeta': 0.28
+        };
+
+        // Token unlock/vesting schedules
+        // null = fully unlocked
+        const UNLOCK_SCHEDULES = {
+            'solana': null,
+            'raydium': null,
+            'marinade': null,
+            'jupiter-exchange-solana': {
+                totalLocked: 42,
+                upcoming: [
+                    { date: '2026-04-01', percent: 5.2, notes: 'Team quarterly unlock' },
+                    { date: '2026-07-01', percent: 5.2, notes: 'Team quarterly unlock' },
+                    { date: '2026-10-01', percent: 5.2, notes: 'Team quarterly unlock' }
+                ],
+                previous: [
+                    { date: '2026-01-01', percent: 5.2, notes: 'Team quarterly unlock' },
+                    { date: '2025-10-01', percent: 5.2, notes: 'Team quarterly unlock' },
+                    { date: '2025-07-01', percent: 5.2, notes: 'Team quarterly unlock' }
+                ]
+            },
+            'jito-governance-token': {
+                totalLocked: 35,
+                upcoming: [
+                    { date: '2026-06-07', percent: 8.0, notes: 'Cliff unlock - team tokens' },
+                    { date: '2026-12-07', percent: 6.0, notes: 'Team vesting' },
+                    { date: '2027-06-07', percent: 6.0, notes: 'Team vesting' }
+                ],
+                previous: [
+                    { date: '2024-12-07', percent: 10.0, notes: 'Airdrop distribution' }
+                ]
+            },
+            'kamino': {
+                totalLocked: 28,
+                upcoming: [
+                    { date: '2026-04-30', percent: 4.5, notes: 'Monthly team unlock' },
+                    { date: '2026-05-30', percent: 4.5, notes: 'Monthly team unlock' },
+                    { date: '2026-06-30', percent: 4.5, notes: 'Monthly team unlock' }
+                ],
+                previous: [
+                    { date: '2026-03-30', percent: 4.5, notes: 'Monthly team unlock' },
+                    { date: '2026-02-28', percent: 4.5, notes: 'Monthly team unlock' }
+                ]
+            },
+            'meteora': {
+                totalLocked: 45,
+                upcoming: [
+                    { date: '2026-04-15', percent: 6.0, notes: 'Team + investor vesting' },
+                    { date: '2026-07-15', percent: 6.0, notes: 'Team + investor vesting' },
+                    { date: '2026-10-15', percent: 6.0, notes: 'Team + investor vesting' }
+                ],
+                previous: [
+                    { date: '2026-01-15', percent: 6.0, notes: 'Team + investor vesting' },
+                    { date: '2025-10-15', percent: 8.0, notes: 'Initial unlock' }
+                ]
+            },
+            'hivemapper': {
+                totalLocked: 52,
+                upcoming: [
+                    { date: '2026-05-01', percent: 3.2, notes: 'Contributor rewards' },
+                    { date: '2026-08-01', percent: 3.2, notes: 'Contributor rewards' },
+                    { date: '2026-11-01', percent: 3.2, notes: 'Contributor rewards' }
+                ],
+                previous: [
+                    { date: '2026-02-01', percent: 3.2, notes: 'Contributor rewards' },
+                    { date: '2025-11-01', percent: 3.2, notes: 'Contributor rewards' }
+                ]
+            },
+            'metaplex': {
+                totalLocked: 15,
+                upcoming: [
+                    { date: '2026-09-20', percent: 2.5, notes: 'Final team unlock' }
+                ],
+                previous: [
+                    { date: '2025-09-20', percent: 5.0, notes: 'Team unlock' },
+                    { date: '2024-09-20', percent: 7.5, notes: 'Team unlock' }
+                ]
+            },
+            'zeta': {
+                totalLocked: 40,
+                upcoming: [
+                    { date: '2026-06-27', percent: 7.5, notes: 'Cliff unlock - team' },
+                    { date: '2026-12-27', percent: 5.0, notes: 'Team vesting' },
+                    { date: '2027-06-27', percent: 5.0, notes: 'Team vesting' }
+                ],
+                previous: [
+                    { date: '2025-06-27', percent: 10.0, notes: 'Initial airdrop' }
+                ]
+            },
+            'geodnet': {
+                totalLocked: 38,
+                upcoming: [
+                    { date: '2026-05-15', percent: 4.0, notes: 'Network rewards vesting' },
+                    { date: '2026-08-15', percent: 4.0, notes: 'Network rewards vesting' },
+                    { date: '2026-11-15', percent: 4.0, notes: 'Network rewards vesting' }
+                ],
+                previous: [
+                    { date: '2026-02-15', percent: 4.0, notes: 'Network rewards vesting' },
+                    { date: '2025-11-15', percent: 4.0, notes: 'Network rewards vesting' }
+                ]
+            }
+        };
+
+        function formatPrice(price) {
+            if (price === null || price === undefined) return 'N/A';
+            if (price < 0.00001) return '$' + price.toExponential(2);
+            if (price < 0.01) return '$' + price.toFixed(6);
+            if (price < 1) return '$' + price.toFixed(4);
+            if (price < 1000) return '$' + price.toFixed(2);
+            return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatLargeNumber(num) {
+            if (num === null || num === undefined) return 'N/A';
+            if (num >= 1e12) return '$' + (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return '$' + (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return '$' + (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return '$' + (num / 1e3).toFixed(2) + 'K';
+            return '$' + num.toFixed(2);
+        }
+
+        function formatChange(change) {
+            if (change === null || change === undefined) return 'N/A';
+            const sign = change >= 0 ? '+' : '';
+            return sign + change.toFixed(2) + '%';
+        }
+
+        function formatAthChange(change) {
+            if (change === null || change === undefined) return 'N/A';
+            return change.toFixed(2) + '%';
+        }
+
+        function getDaysUntil(dateString) {
+            const targetDate = new Date(dateString);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffTime = targetDate - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function formatUnlockDate(dateString) {
+            const date = new Date(dateString);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+        }
+
+        function getDateClass(dateString) {
+            const days = getDaysUntil(dateString);
+            if (days < 0) return 'past';
+            if (days <= 30) return 'soon';
+            if (days <= 90) return 'warning';
+            return 'future';
+        }
+
+        function hasUnlockData(tokenId) {
+            return UNLOCK_SCHEDULES[tokenId] !== undefined;
+        }
+
+        function toggleUnlockDetails(tokenId, event) {
+            event.stopPropagation();
+            if (expandedUnlocks.has(tokenId)) {
+                expandedUnlocks.delete(tokenId);
+            } else {
+                expandedUnlocks.add(tokenId);
+            }
+            renderTokens();
+        }
+
+        function renderUnlockDetails(tokenId) {
+            const schedule = UNLOCK_SCHEDULES[tokenId];
+
+            if (schedule === null) {
+                return `<div class="unlock-fully-vested">This token is fully unlocked with no remaining vesting schedule.</div>`;
+            }
+
+            if (!schedule) {
+                return `<div class="unlock-fully-vested" style="color: var(--text-muted);">No unlock data available for this token.</div>`;
+            }
+
+            let html = '<div class="unlock-details-content">';
+
+            // Upcoming unlocks
+            html += '<div class="unlock-section">';
+            html += '<div class="unlock-section-title">Upcoming Unlocks</div>';
+            if (schedule.upcoming && schedule.upcoming.length > 0) {
+                schedule.upcoming.forEach(unlock => {
+                    const dateClass = getDateClass(unlock.date);
+                    const days = getDaysUntil(unlock.date);
+                    const daysText = days === 1 ? '1 day' : `${days} days`;
+                    html += `
+                        <div class="unlock-item">
+                            <div>
+                                <div class="unlock-date ${dateClass}">${formatUnlockDate(unlock.date)}</div>
+                                <div class="unlock-notes">${unlock.notes}${days > 0 ? ` (in ${daysText})` : ''}</div>
+                            </div>
+                            <div class="unlock-percent">${unlock.percent}%</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div style="color: var(--text-muted); padding: 8px 0;">No upcoming unlocks</div>';
+            }
+            html += '</div>';
+
+            // Previous unlocks
+            html += '<div class="unlock-section">';
+            html += '<div class="unlock-section-title">Previous Unlocks</div>';
+            if (schedule.previous && schedule.previous.length > 0) {
+                schedule.previous.forEach(unlock => {
+                    html += `
+                        <div class="unlock-item">
+                            <div>
+                                <div class="unlock-date past">${formatUnlockDate(unlock.date)}</div>
+                                <div class="unlock-notes">${unlock.notes}</div>
+                            </div>
+                            <div class="unlock-percent">${unlock.percent}%</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div style="color: var(--text-muted); padding: 8px 0;">No previous unlocks recorded</div>';
+            }
+            html += '</div>';
+
+            // Summary
+            html += '<div class="unlock-section">';
+            html += '<div class="unlock-section-title">Summary</div>';
+            html += '<div class="unlock-summary">';
+            html += `<div class="unlock-summary-item"><span class="unlock-summary-label">Total Still Locked</span><span class="unlock-summary-value">${schedule.totalLocked}%</span></div>`;
+            html += `<div class="unlock-summary-item"><span class="unlock-summary-label">Circulating</span><span class="unlock-summary-value">${100 - schedule.totalLocked}%</span></div>`;
+            if (schedule.upcoming && schedule.upcoming.length > 0) {
+                const nextUnlock = schedule.upcoming[0];
+                const days = getDaysUntil(nextUnlock.date);
+                html += `<div class="unlock-summary-item"><span class="unlock-summary-label">Next Unlock</span><span class="unlock-summary-value">${days > 0 ? `in ${days} days` : 'Today'}</span></div>`;
+            }
+            html += '</div>';
+            html += '</div>';
+
+            html += '</div>';
+            return html;
+        }
+
+        function getUnlockLinkText(tokenId) {
+            const schedule = UNLOCK_SCHEDULES[tokenId];
+            if (schedule === undefined) return null;
+            if (schedule === null) return 'Fully unlocked';
+            if (schedule.upcoming && schedule.upcoming.length > 0) {
+                const days = getDaysUntil(schedule.upcoming[0].date);
+                if (days <= 30) return `Unlock in ${days}d`;
+                return 'View unlocks';
+            }
+            return 'View unlocks';
+        }
+
+        async function fetchTokens() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const tbody = document.getElementById('tokenTableBody');
+
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                tokens = data.map((token, index) => {
+                    const launchPrice = LAUNCH_PRICES[token.id] || null;
+                    const launchChangePercent = launchPrice ? ((token.current_price - launchPrice) / launchPrice) * 100 : null;
+                    return {
+                        rank: index + 1,
+                        id: token.id,
+                        name: token.name,
+                        symbol: token.symbol,
+                        image: token.image,
+                        price: token.current_price,
+                        change: token.price_change_percentage_24h,
+                        change7d: token.price_change_percentage_7d_in_currency,
+                        change30d: token.price_change_percentage_30d_in_currency,
+                        ath: token.ath,
+                        athChangePercent: token.ath_change_percentage,
+                        launchPrice: launchPrice,
+                        launchChangePercent: launchChangePercent,
+                        fdv: token.fully_diluted_valuation,
+                        marketCap: token.market_cap,
+                        volume: token.total_volume
+                    };
+                });
+
+                renderTokens();
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Error fetching tokens:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="error">
+                            Failed to fetch token data. Please try again.<br>
+                            <small>${error.message}</small>
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = 'Refresh';
+            }
+        }
+
+        function renderTokens() {
+            const tbody = document.getElementById('tokenTableBody');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filteredTokens = tokens.filter(token =>
+                token.name.toLowerCase().includes(searchTerm) ||
+                token.symbol.toLowerCase().includes(searchTerm)
+            );
+
+            filteredTokens.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
+
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            filteredTokens.forEach((token, index) => {
+                token.displayRank = index + 1;
+            });
+
+            if (filteredTokens.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="loading">No tokens found matching "${searchTerm}"</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredTokens.forEach(token => {
+                const unlockLinkText = getUnlockLinkText(token.id);
+                const hasData = hasUnlockData(token.id);
+                const isExpanded = expandedUnlocks.has(token.id);
+
+                html += `
+                <tr class="${(() => { if (token.fdv && token.fdv <= 5000000) return 'fdv-green'; if (token.fdv && token.fdv <= 25000000) return 'fdv-blue'; if (token.fdv && token.fdv <= 50000000) return 'fdv-orange'; if (token.fdv && token.fdv <= 100000000) return 'fdv-red'; return ''; })()}">
+                    <td class="rank">${token.displayRank}</td>
+                    <td>
+                        <div class="token-info">
+                            <img src="${token.image}" alt="${token.name}" class="token-logo" onerror="this.style.display='none'">
+                            <div>
+                                <div class="token-name token-name-clickable" onclick="openChartModal('${token.id}', '${token.name}', '${token.symbol}', '${token.image}', ${token.price})">${token.name}</div>
+                                <div class="token-symbol">${token.symbol}</div>
+                                ${hasData ? `<div class="unlock-link" onclick="toggleUnlockDetails('${token.id}', event)">${isExpanded ? '▼' : '▶'} ${unlockLinkText}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="price">${formatPrice(token.price)}</td>
+                    <td class="change ${token.change7d >= 0 ? 'positive' : 'negative'}">${formatChange(token.change7d)}</td>
+                    <td class="change ${token.change30d >= 0 ? 'positive' : 'negative'}">${formatChange(token.change30d)}</td>
+                    <td class="ath-down">
+                        <div class="ath-info">
+                            <span>${formatAthChange(token.athChangePercent)}</span>
+                            <span class="ath-price">ATH: ${formatPrice(token.ath)}</span>
+                        </div>
+                    </td>
+                    <td class="${token.launchChangePercent !== null ? (token.launchChangePercent >= 0 ? 'launch-up' : 'launch-down') : ''}">
+                        <div class="ath-info">
+                            <span style="color: ${token.launchChangePercent === null ? '#666' : ''}">${token.launchChangePercent !== null ? (token.launchChangePercent >= 0 ? '+' : '') + token.launchChangePercent.toFixed(0) + '%' : 'N/A'}</span>
+                            <span class="ath-price">${token.launchPrice ? 'Launch: ' + formatPrice(token.launchPrice) : ''}</span>
+                        </div>
+                    </td>
+                    <td class="fdv hide-mobile">${formatLargeNumber(token.fdv)}</td>
+                    <td class="market-cap hide-mobile">${formatLargeNumber(token.marketCap)}</td>
+                    <td class="volume hide-mobile">${formatLargeNumber(token.volume)}</td>
+                </tr>
+                `;
+
+                if (isExpanded && hasData) {
+                    html += `
+                    <tr class="unlock-details-row expanded">
+                        <td colspan="10">
+                            ${renderUnlockDetails(token.id)}
+                        </td>
+                    </tr>
+                    `;
+                }
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+        }
+
+        function setupSorting() {
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+
+                    document.querySelectorAll('th').forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+
+                    if (sortColumn === column) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = column;
+                        sortDirection = (column === 'rank' || column === 'name') ? 'asc' : 'desc';
+                    }
+
+                    th.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                    renderTokens();
+                });
+            });
+        }
+
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+
+            function toggleAutoRefresh() {
+                if (checkbox.checked) {
+                    autoRefreshInterval = setInterval(fetchTokens, 60000);
+                } else {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+
+            checkbox.addEventListener('change', toggleAutoRefresh);
+            toggleAutoRefresh();
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            let debounceTimer;
+
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(renderTokens, 300);
+            });
+        }
+
+        // Chart Modal State
+        let priceChart = null;
+        let currentTokenId = null;
+        let currentDays = 7;
+
+        function openChartModal(tokenId, name, symbol, image, price) {
+            currentTokenId = tokenId;
+            currentDays = 7;
+
+            document.getElementById('modalTokenLogo').src = image;
+            document.getElementById('modalTokenLogo').alt = name;
+            document.getElementById('modalTokenName').textContent = name;
+            document.getElementById('modalTokenSymbol').textContent = symbol;
+            document.getElementById('modalTokenPrice').textContent = formatPrice(price);
+
+            document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.range-btn[data-days="7"]').classList.add('active');
+
+            document.getElementById('chartModal').classList.add('active');
+
+            fetchChartData(tokenId, 7);
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').classList.remove('active');
+            if (priceChart) {
+                priceChart.destroy();
+                priceChart = null;
+            }
+        }
+
+        async function fetchChartData(tokenId, days) {
+            const chartContainer = document.querySelector('.chart-container');
+
+            chartContainer.innerHTML = '<div class="chart-loading"><div class="spinner"></div>Loading chart data...</div>';
+
+            try {
+                const daysParam = days === 'max' ? 'max' : days;
+                const response = await fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=${daysParam}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
+
+                renderChart(data.prices, days);
+
+            } catch (error) {
+                console.error('Error fetching chart data:', error);
+                chartContainer.innerHTML = `<div class="chart-error">Failed to load chart data.<br><small>${error.message}</small></div>`;
+            }
+        }
+
+        function renderChart(prices, days) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+
+            const firstPrice = prices[0][1];
+            const lastPrice = prices[prices.length - 1][1];
+            const isPositive = lastPrice >= firstPrice;
+            const lineColor = isPositive ? '#22c55e' : '#ef4444';
+
+            const formatLabel = (timestamp) => {
+                const date = new Date(timestamp);
+                if (days === 1) {
+                    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                } else if (days <= 30) {
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                } else {
+                    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                }
+            };
+
+            const maxPoints = 100;
+            let chartData = prices;
+            if (prices.length > maxPoints) {
+                const step = Math.ceil(prices.length / maxPoints);
+                chartData = prices.filter((_, i) => i % step === 0);
+            }
+
+            const labels = chartData.map(p => formatLabel(p[0]));
+            const dataPoints = chartData.map(p => p[1]);
+
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Price (USD)',
+                        data: dataPoints,
+                        borderColor: lineColor,
+                        backgroundColor: lineColor + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: lineColor,
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#111111',
+                            titleColor: '#f59e0b',
+                            bodyColor: '#fff',
+                            borderColor: '#262626',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    const idx = context[0].dataIndex;
+                                    const timestamp = chartData[idx][0];
+                                    return new Date(timestamp).toLocaleString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    });
+                                },
+                                label: function(context) {
+                                    return formatPrice(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: '#262626',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#525252',
+                                maxTicksLimit: 8,
+                                maxRotation: 0
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#262626',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#525252',
+                                callback: function(value) {
+                                    return formatPrice(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupChartModal() {
+            document.getElementById('modalClose').addEventListener('click', closeChartModal);
+
+            document.getElementById('chartModal').addEventListener('click', (e) => {
+                if (e.target.id === 'chartModal') {
+                    closeChartModal();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeChartModal();
+                }
+            });
+
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const days = btn.dataset.days === 'max' ? 'max' : parseInt(btn.dataset.days);
+
+                    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    currentDays = days;
+                    fetchChartData(currentTokenId, days);
+                });
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSorting();
+            setupAutoRefresh();
+            setupSearch();
+            setupChartModal();
+
+            fetchTokens();
+        });
+    </script>
+</body>
+</html>
