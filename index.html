@@ -1373,15 +1373,34 @@
 
                 const data = await response.json();
 
+                // Validate prices data
+                if (!data.prices || !Array.isArray(data.prices) || data.prices.length < 2) {
+                    throw new Error('Insufficient price data available for this time range.');
+                }
+
+                // Filter out any null/invalid price points
+                const validPrices = data.prices.filter(p =>
+                    Array.isArray(p) && p.length >= 2 && p[0] != null && p[1] != null
+                );
+
+                if (validPrices.length < 2) {
+                    throw new Error('Insufficient valid price data for this time range.');
+                }
+
                 // Cache the result
                 chartCache[cacheKey] = {
-                    prices: data.prices,
+                    prices: validPrices,
                     timestamp: Date.now()
                 };
 
                 chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
 
-                renderChart(data.prices, days);
+                try {
+                    renderChart(validPrices, days);
+                } catch (renderError) {
+                    console.error('Error rendering chart:', renderError);
+                    chartContainer.innerHTML = `<div class="chart-error">Failed to render chart.<br><small>${renderError.message}</small></div>`;
+                }
 
             } catch (error) {
                 console.error('Error fetching chart data:', error);
