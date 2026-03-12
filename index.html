@@ -1073,6 +1073,8 @@
                 const nextUnlock = schedule.upcoming[0];
                 const days = getDaysUntil(nextUnlock.date);
                 html += `<div class="unlock-summary-item"><span class="unlock-summary-label">Next Unlock</span><span class="unlock-summary-value">${days > 0 ? `in ${days} days` : 'Today'}</span></div>`;
+                const lastUnlock = schedule.upcoming[schedule.upcoming.length - 1];
+                html += `<div class="unlock-summary-item"><span class="unlock-summary-label">Fully Unlocked</span><span class="unlock-summary-value">${formatUnlockDate(lastUnlock.date)}</span></div>`;
             }
             html += '</div>';
             html += '</div>';
