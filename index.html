@@ -844,9 +844,24 @@
         // Token unlock/vesting schedules
         // null = fully unlocked
         const UNLOCK_SCHEDULES = {
-            'solana': null,
-            'raydium': null,
-            'marinade': null,
+            'solana': { fullyUnlocked: true, notes: [
+                'Current inflation rate ~4%, decreasing 15% annually toward 1.5% floor',
+                '50% of all transaction fees are burned (11M+ SOL burned to date)',
+                '~67% of circulating SOL is staked',
+                'No hard supply cap — disinflationary, not deflationary yet'
+            ]},
+            'raydium': { fullyUnlocked: true, notes: [
+                'Buyback-and-burn active: 12% of trading fees buy & burn RAY',
+                '~71M RAY burned to date (~$196M cumulative buybacks)',
+                'Jan 2025 record: $54M spent burning 8.8M RAY in one month',
+                'LaunchLab adds 25% of its fees to RAY buybacks'
+            ]},
+            'marinade': { fullyUnlocked: true, notes: [
+                '300M MNDE burned Sep 2025 (MIP-14), reducing supply from 1B to 700M',
+                '50% of protocol revenue funds ongoing MNDE buybacks (MIP-11)',
+                'DAO treasury holds ~264M MNDE after burn',
+                'Buybacks executed via Jupiter DCA over 30-day periods'
+            ]},
             'jupiter-exchange-solana': {
                 totalLocked: 54,
                 upcoming: [
@@ -1079,7 +1094,13 @@
                     { date: '2026-03-03', percent: 2.1, notes: 'Monthly vest' }
                 ]
             },
-            'metaplex': null,
+            'metaplex': { fullyUnlocked: true, notes: [
+                '50% of protocol fees buy MPLX from open market for DAO treasury',
+                '73.8M MPLX accumulated via buybacks (7.4% of supply)',
+                'H1 2025: $6.85M in buybacks (38.5M MPLX, ~3.9% of supply)',
+                'DAO treasury holds 231M MPLX (23% of total supply)',
+                'All vesting schedules completed in 2025'
+            ]},
             'zeta': {
                 totalLocked: 62,
                 upcoming: [
@@ -1290,8 +1311,13 @@
         function renderUnlockDetails(tokenId) {
             const schedule = UNLOCK_SCHEDULES[tokenId];
 
-            if (schedule === null) {
-                return `<div class="unlock-fully-vested">This token is fully unlocked with no remaining vesting schedule.</div>`;
+            if (schedule === null || (schedule && schedule.fullyUnlocked)) {
+                let notesHtml = '';
+                if (schedule && schedule.notes && schedule.notes.length > 0) {
+                    const items = schedule.notes.map(n => `<li style="margin-bottom: 4px;">${n}</li>`).join('');
+                    notesHtml = `<ul style="color: var(--text-secondary); margin-top: 8px; padding-left: 18px; font-size: 0.85em; line-height: 1.5;">${items}</ul>`;
+                }
+                return `<div class="unlock-fully-vested">This token is fully unlocked with no remaining vesting schedule.${notesHtml}</div>`;
             }
 
             if (!schedule) {
@@ -1366,7 +1392,7 @@
         function getUnlockLinkText(tokenId) {
             const schedule = UNLOCK_SCHEDULES[tokenId];
             if (schedule === undefined) return null;
-            if (schedule === null) return 'Fully unlocked';
+            if (schedule === null || (schedule && schedule.fullyUnlocked)) return 'Fully unlocked';
             if (schedule.upcoming && schedule.upcoming.length > 0) {
                 const days = getDaysUntil(schedule.upcoming[0].date);
                 if (days <= 30) return `Unlock in ${days}d`;
