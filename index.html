@@ -814,7 +814,8 @@
             'raydium',
             'zeta',
             'sanctum-2',
-            'doublezero'
+            'doublezero',
+            'collector-crypt'
         ];
 
         const API_URL = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${TOKEN_IDS.join(',')}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d,30d`;
@@ -838,7 +839,8 @@
             'raydium': 7.50,
             'zeta': 0.28,
             'sanctum-2': 0.15,
-            'doublezero': 0.74
+            'doublezero': 0.74,
+            'collector-crypt': 0.026
         };
 
         // Token unlock/vesting schedules
@@ -1240,7 +1242,14 @@
                     { date: '2026-02-01', percent: 2.1, notes: 'Monthly vest' },
                     { date: '2026-03-01', percent: 2.1, notes: 'Monthly vest' }
                 ]
-            }
+            },
+            'collector-crypt': { fullyUnlocked: false, notes: [
+                'No published vesting schedule or on-chain lock-ups',
+                'Total supply: 2B CARDS — only ~13% circulating (~257M)',
+                'Allocation: Foundation 36.8%, Community 20%, Team 19.5%, Pre-Seed 8.2%, Genesis 5%, Advisors 4.4%, Seed 3.7%, Liquidity 2.5%',
+                '~87% of supply is non-circulating with no enforced lock-up — dilution risk',
+                'Team has stated informally they have no plans to sell'
+            ]}
         };
 
         function formatPrice(price) {
@@ -1324,6 +1333,14 @@
                 return `<div class="unlock-fully-vested" style="color: var(--text-muted);">No unlock data available for this token.</div>`;
             }
 
+            // Notes-only schedule (no upcoming/previous arrays)
+            if (!schedule.upcoming && !schedule.previous && schedule.notes) {
+                const items = schedule.notes.map(n => `<li style="margin-bottom: 4px;">${n}</li>`).join('');
+                const notesHtml = `<ul style="color: var(--text-secondary); margin-top: 8px; padding-left: 18px; font-size: 0.85em; line-height: 1.5;">${items}</ul>`;
+                const lockedPct = schedule.totalLocked ? `<div style="color: var(--gold); margin-bottom: 8px; font-weight: 600;">${schedule.totalLocked}% of supply still locked</div>` : '';
+                return `<div class="unlock-fully-vested">${lockedPct}No published unlock schedule.${notesHtml}</div>`;
+            }
+
             let html = '<div class="unlock-details-content">';
 
             // Upcoming unlocks
@@ -1398,6 +1415,7 @@
                 if (days <= 30) return `Unlock in ${days}d`;
                 return 'View unlocks';
             }
+            if (!schedule.upcoming && !schedule.previous && schedule.notes) return 'No schedule';
             return 'View unlocks';
         }
 
