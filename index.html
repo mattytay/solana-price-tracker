@@ -839,9 +839,24 @@
             'collector-crypt': 0.026
         };
 
+        // Override FDV for tokens where CoinGecko doesn't reflect approved future dilution
+        // Maps coingecko ID -> max potential supply (used to calculate FDV = price * max supply)
+        const FDV_MAX_SUPPLY_OVERRIDE = {
+            'avici': 32950000  // 12.9M current + up to 8.24M team (milestone-based) + ~11.8M projected fundraising dilution
+        };
+
         // Token unlock/vesting schedules
         // null = fully unlocked
         const UNLOCK_SCHEDULES = {
+            'avici': { fullyUnlocked: false, notes: [
+                'Team performance package passed via MetaDAO futarchy governance',
+                'Up to 8.24M AVICI minted if price milestones hit (60-day TWAP), all locked until Jan 3, 2029',
+                'Phase 1 ($100M–$1B): 15% of supply unlocks linearly from $5.41 to $43.59 (~4.94M AVICI)',
+                'Phase 2 ($1.5B–$5B): 10% of supply in equal 1.25% tranches at $49.89 / $65.62 / $80.93 / $95.84 / $110.36 / $124.51 / $138.29 / $151.75 (~3.30M AVICI)',
+                'If milestones are never hit, tokens are never minted — 0% dilution',
+                'Max potential supply: ~32.95M AVICI (current 12.9M + 8.24M team + projected fundraising dilution)',
+                'Current supply: 12.9M (100% circulating) — FDV reflects max potential dilution'
+            ]},
             'solana': { fullyUnlocked: true, notes: [
                 'Current inflation rate ~4%, decreasing 15% annually toward 1.5% floor',
                 '50% of all transaction fees are burned (11M+ SOL burned to date)',
@@ -1448,7 +1463,7 @@
                         athChangePercent: token.ath_change_percentage,
                         launchPrice: launchPrice,
                         launchChangePercent: launchChangePercent,
-                        fdv: token.fully_diluted_valuation,
+                        fdv: FDV_MAX_SUPPLY_OVERRIDE[token.id] ? token.current_price * FDV_MAX_SUPPLY_OVERRIDE[token.id] : token.fully_diluted_valuation,
                         marketCap: token.market_cap,
                         volume: token.total_volume
                     };
