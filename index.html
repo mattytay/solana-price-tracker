@@ -1593,7 +1593,7 @@
                 const isExpanded = expandedUnlocks.has(token.id);
 
                 html += `
-                <tr class="${(() => { if (token.fdv && token.fdv <= 5000000) return 'fdv-green'; if (token.fdv && token.fdv <= 25000000) return 'fdv-blue'; if (token.fdv && token.fdv <= 50000000) return 'fdv-orange'; if (token.fdv && token.fdv <= 100000000) return 'fdv-red'; return ''; })()}">
+                <tr class="${(() => { if (activeTab === 'portfolio') return ''; if (token.fdv && token.fdv <= 5000000) return 'fdv-green'; if (token.fdv && token.fdv <= 25000000) return 'fdv-blue'; if (token.fdv && token.fdv <= 50000000) return 'fdv-orange'; if (token.fdv && token.fdv <= 100000000) return 'fdv-red'; return ''; })()}">
                     <td class="rank">${token.displayRank}</td>
                     <td>
                         <div class="token-info">
